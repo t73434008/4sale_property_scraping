@@ -35,11 +35,34 @@ class SavingOnDrive:
         return file.get('id')
 
     def save_files(self, files):
-        parent_folder_id = '14CPVWBqYe5B0sK8sdB0cvcmtJGHoOQyu'  # ID of "Property Scraper Uploads"
-
+        parent_folder_ids = [
+            '1kM0Ga3dOdI_qNMRaUTyPkGtVz3RGO_gd',  # Existing parent folder
+            '1irMgyB4aaiFkBZfgWUrBSqwJj0k0xE79'   # New parent folder
+        ]
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-        folder_id = self.create_folder(yesterday, parent_folder_id)
+    
+        for parent_folder_id in parent_folder_ids:
+            try:
+                # Create a dated subfolder in the current parent folder
+                folder_id = self.create_folder(yesterday, parent_folder_id)
+                print(f"Created subfolder '{yesterday}' in parent folder ID: {parent_folder_id}")
+    
+                # Upload each file to the subfolder
+                for file_name in files:
+                    self.upload_file(file_name, folder_id)
+                    print(f"Uploaded '{file_name}' to folder '{yesterday}' in parent folder ID: {parent_folder_id}")
+    
+                print(f"Files uploaded successfully to folder '{yesterday}' in parent folder ID: {parent_folder_id}")
+            except Exception as e:
+                print(f"Error uploading to parent folder ID {parent_folder_id}: {e}")
+                continue
 
-        for file_name in files:
-            self.upload_file(file_name, folder_id)
-        print(f"Files uploaded successfully to folder '{yesterday}' on Google Drive.")
+    # def save_files(self, files):
+    #     parent_folder_id = '14CPVWBqYe5B0sK8sdB0cvcmtJGHoOQyu'  # ID of "Property Scraper Uploads"
+
+    #     yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+    #     folder_id = self.create_folder(yesterday, parent_folder_id)
+
+    #     for file_name in files:
+    #         self.upload_file(file_name, folder_id)
+    #     print(f"Files uploaded successfully to folder '{yesterday}' on Google Drive.")
