@@ -13,9 +13,36 @@ class MainScraper:
         self.categories = categories  # List of (name, base_url, pages)
         self.results = {}  # Dictionary to store results for each category
 
+    # async def scrape_category(self, name, base_url, pages):
+    #     all_properties = []
+    #     # Calculate yesterday's date in 'YYYY-MM-DD' format
+    #     yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+    #     print(f"Filtering properties published on: {yesterday}")
+
+    #     for i in range(1, pages + 1):
+    #         url = base_url.format(i)
+    #         print(f"Scraping page: {url} for category: {name}")
+    #         scraper = DetailsScraping(url)
+    #         try:
+    #             properties = await scraper.get_property_details()
+    #             # Filter properties by published_date
+    #             filtered_properties = [
+    #                 prop for prop in properties
+    #                 if 'date_published' in prop and prop['date_published'].split(' ')[0] == yesterday
+    #             ]
+    #             if not filtered_properties:
+    #                 print(f"No properties found on page {i} for category {name} with the specified date.")
+    #             all_properties.extend(filtered_properties)
+    #         except Exception as e:
+    #             print(f"Error scraping {url}: {e}")
+
+    #     if all_properties:
+    #         self.results[name] = all_properties
+    #     else:
+    #         print(f"No data collected for category {name}.")
+
     async def scrape_category(self, name, base_url, pages):
         all_properties = []
-        # Calculate yesterday's date in 'YYYY-MM-DD' format
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
         print(f"Filtering properties published on: {yesterday}")
 
@@ -25,10 +52,10 @@ class MainScraper:
             scraper = DetailsScraping(url)
             try:
                 properties = await scraper.get_property_details()
-                # Filter properties by published_date
+                # Defensive: only filter if date_published is a valid string
                 filtered_properties = [
                     prop for prop in properties
-                    if 'date_published' in prop and prop['date_published'].split(' ')[0] == yesterday
+                    if isinstance(prop.get('date_published'), str) and prop['date_published'].split(' ')[0] == yesterday
                 ]
                 if not filtered_properties:
                     print(f"No properties found on page {i} for category {name} with the specified date.")
@@ -41,20 +68,18 @@ class MainScraper:
         else:
             print(f"No data collected for category {name}.")
 
-    async def run(self):
-        tasks = []
-        for name, base_url, pages in self.categories:
-            tasks.append(self.scrape_category(name, base_url, pages))
-        await asyncio.gather(*tasks)
-
     def save_to_excel(self, file_name):
         try:
+            # Only write if there is at least one non-empty category!
+            data_to_write = {name: properties for name, properties in self.results.items() if properties}
+            if not data_to_write:
+                print("No data to save to Excel. Skipping file write.")
+                return
             with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
-                for name, properties in self.results.items():
-                    if properties:  # Only save sheets with data
-                        df = pd.DataFrame(properties)
-                        df.to_excel(writer, sheet_name=name, index=False)
-                        print(f"Data for '{name}' saved to Excel.")
+                for name, properties in data_to_write.items():
+                    df = pd.DataFrame(properties)
+                    df.to_excel(writer, sheet_name=name, index=False)
+                    print(f"Data for '{name}' saved to Excel.")
             print(f"All data successfully saved to {file_name}.")
         except PermissionError:
             print(f"Error: Unable to save the file '{file_name}'. It may be open in another application.")
@@ -72,6 +97,39 @@ class MainScraper:
                 print(f"Failed to save to backup file: {e}")
         except Exception as e:
             print(f"An unexpected error occurred while saving to Excel: {e}")
+
+    
+    async def run(self):
+        tasks = []
+        for name, base_url, pages in self.categories:
+            tasks.append(self.scrape_category(name, base_url, pages))
+        await asyncio.gather(*tasks)
+
+    # def save_to_excel(self, file_name):
+    #     try:
+    #         with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
+    #             for name, properties in self.results.items():
+    #                 if properties:  # Only save sheets with data
+    #                     df = pd.DataFrame(properties)
+    #                     df.to_excel(writer, sheet_name=name, index=False)
+    #                     print(f"Data for '{name}' saved to Excel.")
+    #         print(f"All data successfully saved to {file_name}.")
+    #     except PermissionError:
+    #         print(f"Error: Unable to save the file '{file_name}'. It may be open in another application.")
+    #         backup_file_name = file_name.replace('.xlsx', '_backup.xlsx')
+    #         print(f"Attempting to save data to '{backup_file_name}' instead.")
+    #         try:
+    #             with pd.ExcelWriter(backup_file_name, engine='openpyxl') as writer:
+    #                 for name, properties in self.results.items():
+    #                     if properties:
+    #                         df = pd.DataFrame(properties)
+    #                         df.to_excel(writer, sheet_name=name, index=False)
+    #                         print(f"Data for '{name}' saved to backup file.")
+    #             print(f"All data successfully saved to {backup_file_name}.")
+    #         except Exception as e:
+    #             print(f"Failed to save to backup file: {e}")
+    #     except Exception as e:
+    #         print(f"An unexpected error occurred while saving to Excel: {e}")
 
 
 
@@ -157,3 +215,4 @@ if __name__ == "__main__":
 
     # Save files to Google Drive
     drive_saver.save_files(excel_files)
+
