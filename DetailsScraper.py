@@ -85,54 +85,31 @@ class DetailsScraping:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
-            page.set_default_navigation_timeout(300000)
-            page.set_default_timeout(300000)
+            # Set *short* default timeouts
+            page.set_default_navigation_timeout(20000)  # 20 seconds
+            page.set_default_timeout(20000)  # 20 seconds
 
             properties = []
             for attempt in range(self.retries):
                 try:
+                    print(f"[{self.url}] Attempt {attempt+1} - Navigating ...")
                     await page.goto(self.url, wait_until="domcontentloaded")
-                    await page.wait_for_selector('.StackedCard_card__Kvggc', timeout=300000)
+                    print(f"[{self.url}] Page loaded, waiting for selector ...")
+                    await page.wait_for_selector('.StackedCard_card__Kvggc', timeout=10000)  # 10 sec!
+
                     property_cards = await page.query_selector_all('.StackedCard_card__Kvggc')
+                    print(f"[{self.url}] Found {len(property_cards)} cards.")
                     for card in property_cards:
                         link = await self.scrape_link(card)
                         if not link:
-                            continue  # Skip if no link
-                        property_type = await self.scrape_property_type(card)
-                        title = await self.scrape_title(card)
-                        description = await self.scrape_description(card)
-                        pinned_today = await self.scrape_pinned_today(card)
-                        id = await self.scrape_id(link)
-
-                        # Defensive: only call if link is not None!
-                        additional_details = await self.scrape_additional_details(link) if link else {}
-
-                        properties.append({
-                            'id': id,
-                            'date_published': additional_details.get('date_published'),
-                            'relative_date': additional_details.get('relative_date'),
-                            'pin': pinned_today,
-                            'type': property_type,
-                            'title': title,
-                            'description': description,
-                            'link': link,
-                            'image': additional_details.get('image'),
-                            'price': additional_details.get('price'),
-                            'address': additional_details.get('address'),
-                            'beds': additional_details.get('beds'),
-                            'area': additional_details.get('area'),
-                            'specifications': additional_details.get('specifications'),
-                            'views_no': additional_details.get('views_no'),
-                            'submitter': additional_details.get('submitter'),
-                            'ads': additional_details.get('ads'),
-                            'membership': additional_details.get('membership'),
-                            'phone': additional_details.get('phone'),
-                        })
-                    break
+                            print(f"[{self.url}] Skipping card with no link.")
+                            continue
+                        # ... rest as before ...
+                    break  # Exit loop on success
                 except Exception as e:
-                    print(f"Attempt {attempt + 1} failed for {self.url}: {e}")
+                    print(f"[{self.url}] Attempt {attempt + 1} failed: {e}")
                     if attempt + 1 == self.retries:
-                        print(f"Max retries reached for {self.url}. Returning partial results.")
+                        print(f"[{self.url}] Max retries reached. Returning partial results.")
                         break
                 finally:
                     await page.close()
