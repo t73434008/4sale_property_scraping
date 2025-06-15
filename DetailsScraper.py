@@ -80,32 +80,69 @@ class DetailsScraping:
 
     #         await browser.close()
     #         return properties
-
+    
     async def get_property_details(self):
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
-            # Set *short* default timeouts
-            page.set_default_navigation_timeout(20000)  # 20 seconds
-            page.set_default_timeout(20000)  # 20 seconds
-
+            page.set_default_navigation_timeout(20000)
+            page.set_default_timeout(20000)
+    
             properties = []
             for attempt in range(self.retries):
                 try:
                     print(f"[{self.url}] Attempt {attempt+1} - Navigating ...")
                     await page.goto(self.url, wait_until="domcontentloaded")
                     print(f"[{self.url}] Page loaded, waiting for selector ...")
-                    await page.wait_for_selector('.StackedCard_card__Kvggc', timeout=10000)  # 10 sec!
-
-                    property_cards = await page.query_selector_all('.StackedCard_card__Kvggc')
-                    print(f"[{self.url}] Found {len(property_cards)} cards.")
-                    for card in property_cards:
-                        link = await self.scrape_link(card)
-                        if not link:
-                            print(f"[{self.url}] Skipping card with no link.")
+                    await page.wait_for_selector('a.StackedCard_wrapper__acC1w', timeout=10000)
+                    anchors = await page.query_selector_all('a.StackedCard_wrapper__acC1w')
+                    print(f"[{self.url}] Found {len(anchors)} property anchors.")
+    
+                    for anchor in anchors:
+                        rawlink = await anchor.get_attribute('href')
+                        if not rawlink:
+                            print(f"[{self.url}] Skipping anchor with no href.")
                             continue
-                        # ... rest as before ...
-                    break  # Exit loop on success
+                        base_url = 'https://www.q84sale.com'
+                        link = f"{base_url}{rawlink}"
+    
+                        # Card info is inside the anchor
+                        card = await anchor.query_selector('.StackedCard_card__Kvggc')
+                        if not card:
+                            print(f"[{self.url}] Anchor missing card div, skipping.")
+                            continue
+    
+                        # Use your existing methods, passing `card` as before:
+                        property_type = await self.scrape_property_type(card)
+                        title = await self.scrape_title(card)
+                        description = await self.scrape_description(card)
+                        pinned_today = await self.scrape_pinned_today(card)
+                        id = await self.scrape_id(link)
+    
+                        additional_details = await self.scrape_additional_details(link)
+    
+                        properties.append({
+                            'id': id,
+                            'date_published': additional_details.get('date_published'),
+                            'relative_date': additional_details.get('relative_date'),
+                            'pin': pinned_today,
+                            'type': property_type,
+                            'title': title,
+                            'description': description,
+                            'link': link,
+                            'image': additional_details.get('image'),
+                            'price': additional_details.get('price'),
+                            'address': additional_details.get('address'),
+                            'beds': additional_details.get('beds'),
+                            'area': additional_details.get('area'),
+                            'specifications': additional_details.get('specifications'),
+                            'views_no': additional_details.get('views_no'),
+                            'submitter': additional_details.get('submitter'),
+                            'ads': additional_details.get('ads'),
+                            'membership': additional_details.get('membership'),
+                            'phone': additional_details.get('phone'),
+                        })
+                    break  # exit retry loop on success
                 except Exception as e:
                     print(f"[{self.url}] Attempt {attempt + 1} failed: {e}")
                     if attempt + 1 == self.retries:
@@ -117,7 +154,7 @@ class DetailsScraping:
                         page = await browser.new_page()
             await browser.close()
             return properties
-
+    
     # Method to scrape the link
     async def scrape_link(self, card):
         rawlink = await card.get_attribute('href')
