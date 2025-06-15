@@ -138,19 +138,19 @@ if __name__ == "__main__":
 
     # Define the scraping categories
     categories_1 = [
-        ("House for Sale", "https://www.q84sale.com/en/property/for-sale/house-for-sale/{}", 5),
-        ("Building or floors", "https://www.q84sale.com/en/property/for-sale/building-or-floors/{}", 1),
-        ("Apartment for Sale", "https://www.q84sale.com/en/property/for-sale/apartment-for-sale/{}", 2),
-        ("Demolishing", "https://www.q84sale.com/en/property/for-sale/demolishing/{}", 1),
-        ("Lounge for Sale", "https://www.q84sale.com/en/property/for-sale/lounge-for-sale/{}", 1),
-        ("Chalet for Sale", "https://www.q84sale.com/en/property/for-sale/chalet-for-sale/{}", 1),
-        ("Farms for Sale", "https://www.q84sale.com/en/property/for-sale/farms-for-sale/{}", 1),
-        ("Land", "https://www.q84sale.com/en/property/for-sale/land/{}", 1),
-        ("Residential Certificate", "https://www.q84sale.com/en/property/for-sale/residential-certificate/{}", 1),
-        ("Commercial Land Certificate", "https://www.q84sale.com/en/property/for-sale/commercial-land-certificate/{}", 1),
-        ("Shop for Sale", "https://www.q84sale.com/en/property/for-sale/shop-for-sale/{}", 2),
-        ("Company", "https://www.q84sale.com/en/property/for-sale/company/{}", 1),
-        ("Wanted Property for Sale", "https://www.q84sale.com/en/property/for-sale/wanted-property-for-sale/{}", 1),
+        ("House for Sale", "https://www.q84sale.com/en/property/house-for-sale/{}", 5),
+        ("Building or floors", "https://www.q84sale.com/en/property/building-or-floors/{}", 1),
+        ("Apartment for Sale", "https://www.q84sale.com/en/property/apartment-for-sale/{}", 2),
+        ("Demolishing", "https://www.q84sale.com/en/property/demolishing/{}", 1),
+        ("Lounge for Sale", "https://www.q84sale.com/en/property/lounge-for-sale/{}", 1),
+        ("Chalet for Sale", "https://www.q84sale.com/en/property/chalet-for-sale/{}", 1),
+        ("Farms for Sale", "https://www.q84sale.com/en/property/farms-for-sale/{}", 1),
+        ("Land", "https://www.q84sale.com/en/property/land/{}", 1),
+        ("Residential Certificate", "https://www.q84sale.com/en/property/residential-certificate/{}", 1),
+        ("Commercial Land Certificate", "https://www.q84sale.com/en/property/commercial-land-certificate/{}", 1),
+        ("Shop for Sale", "https://www.q84sale.com/en/property/shop-for-sale/{}", 2),
+        ("Company", "https://www.q84sale.com/en/property/company/{}", 1),
+        ("Wanted Property for Sale", "https://www.q84sale.com/en/property/wanted-property-for-sale/{}", 1),
     ]
 
     categories_2 = [
