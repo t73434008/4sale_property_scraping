@@ -80,35 +80,49 @@ async def get_categories_1():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
+        print(f"Going to main for-sale page: {url}")
         await page.goto(url, wait_until='domcontentloaded')
 
-        # 1. Grab title/href from main page FIRST
-        anchor_infos = []
+        # Grab all category anchors
         category_anchors = await page.query_selector_all('section.styles_section__10hLu a.styles_link__Pf9GR')
-        for anchor in category_anchors:
+        print(f"Found {len(category_anchors)} category anchors.")
+
+        anchor_infos = []
+        for idx, anchor in enumerate(category_anchors):
             title = await anchor.get_attribute('title')
             link = await anchor.get_attribute('href')
+            print(f"Anchor {idx}: title={title!r}, link={link!r}")
             if title and link:
                 anchor_infos.append((title, link))
 
-        # 2. For each, now check page count (separately, after collecting all links)
-        for title, link in anchor_infos:
+        # Now check number of pages for each
+        for idx, (title, link) in enumerate(anchor_infos):
             base_url = "https://www.q84sale.com" + link
+            print(f"\nChecking category: {title} at {base_url}")
             pages = 0
             for i in range(1, 6):
                 check_url = base_url.replace('/1', f'/{i}')
+                print(f"  Checking page {i}: {check_url}")
                 try:
                     resp = await page.goto(check_url, wait_until='domcontentloaded')
                     status = resp.status
-                except Exception:
+                except Exception as e:
+                    print(f"    Error loading page {i}: {e}")
                     status = 404
                 if status == 200:
                     pages = i
                 else:
+                    print(f"    Page {i} not found (status {status}), stopping at {pages} pages.")
                     break
             if pages > 0:
+                print(f"  --> Category '{title}' has {pages} pages.")
                 categories.append((title, base_url.replace('/1', '/{}'), pages))
+            else:
+                print(f"  --> Category '{title}' has no accessible pages, skipping.")
 
+        print("\nFinal categories_1 list:")
+        for cat in categories:
+            print(cat)
         await browser.close()
     return categories
 
