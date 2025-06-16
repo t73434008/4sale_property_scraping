@@ -82,14 +82,18 @@ async def get_categories_1():
         page = await browser.new_page()
         await page.goto(url, wait_until='domcontentloaded')
 
+        # 1. Grab title/href from main page FIRST
+        anchor_infos = []
         category_anchors = await page.query_selector_all('section.styles_section__10hLu a.styles_link__Pf9GR')
         for anchor in category_anchors:
             title = await anchor.get_attribute('title')
             link = await anchor.get_attribute('href')
-            if not title or not link:
-                continue
+            if title and link:
+                anchor_infos.append((title, link))
+
+        # 2. For each, now check page count (separately, after collecting all links)
+        for title, link in anchor_infos:
             base_url = "https://www.q84sale.com" + link
-            # We'll detect the maximum page number (max 5)
             pages = 0
             for i in range(1, 6):
                 check_url = base_url.replace('/1', f'/{i}')
@@ -101,10 +105,10 @@ async def get_categories_1():
                 if status == 200:
                     pages = i
                 else:
-                    # Stop at first missing page
                     break
             if pages > 0:
                 categories.append((title, base_url.replace('/1', '/{}'), pages))
+
         await browser.close()
     return categories
 
