@@ -13,114 +13,37 @@ class DetailsScraping:
         self.url = url
         self.retries = retries  # Retry count for robustness
 
-    # async def get_property_details(self):
-    #     async with async_playwright() as p:
-    #         browser = await p.chromium.launch(headless=True)
-    #         page = await browser.new_page()
-
-    #         # Set timeouts
-    #         page.set_default_navigation_timeout(300000)
-    #         page.set_default_timeout(300000)  # General timeout
-
-    #         properties = []  # To store scraped properties
-
-    #         for attempt in range(self.retries):
-    #             try:
-    #                 # Navigate to the page
-    #                 await page.goto(self.url, wait_until="domcontentloaded")
-    #                 await page.wait_for_selector('.StackedCard_card__Kvggc', timeout=300000)
-
-    #                 # Extract property details
-    #                 property_cards = await page.query_selector_all('.StackedCard_card__Kvggc')
-    #                 for card in property_cards:
-    #                     # Extract property information
-    #                     link = await self.scrape_link(card)
-    #                     property_type = await self.scrape_property_type(card)
-    #                     title = await self.scrape_title(card)
-    #                     description = await self.scrape_description(card)
-    #                     pinned_today = await self.scrape_pinned_today(card)
-    #                     id = await self.scrape_id(link)
-
-    #                     # Scrape additional details from the property page
-    #                     additional_details = await self.scrape_additional_details(link)
-
-    #                     properties.append({
-    #                         'id': id,
-    #                         'date_published': additional_details.get('date_published'),
-    #                         'relative_date': additional_details.get('relative_date'),
-    #                         'pin': pinned_today,
-    #                         'type': property_type,
-    #                         'title': title,
-    #                         'description': description,
-    #                         'link': link,
-    #                         'image': additional_details.get('image'),
-    #                         'price': additional_details.get('price'),
-    #                         'address': additional_details.get('address'),
-    #                         'beds': additional_details.get('beds'),
-    #                         'area': additional_details.get('area'),
-    #                         'specifications': additional_details.get('specifications'),
-    #                         'views_no': additional_details.get('views_no'),  # Added views number here
-    #                         'submitter': additional_details.get('submitter'),
-    #                         'ads': additional_details.get('ads'),
-    #                         'membership': additional_details.get('membership'),
-    #                         'phone': additional_details.get('phone'),
-    #                     })
-    #                 break  # Exit loop if successful
-
-    #             except Exception as e:
-    #                 print(f"Attempt {attempt + 1} failed for {self.url}: {e}")
-    #                 if attempt + 1 == self.retries:
-    #                     print(f"Max retries reached for {self.url}. Returning partial results.")
-    #                     break
-    #             finally:
-    #                 # Close page between attempts to ensure proper cleanup
-    #                 await page.close()
-    #                 if attempt + 1 < self.retries:
-    #                     page = await browser.new_page()
-
-    #         await browser.close()
-    #         return properties
-    
     async def get_property_details(self):
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
-            page.set_default_navigation_timeout(20000)
-            page.set_default_timeout(20000)
-    
-            properties = []
+
+            # Set timeouts
+            page.set_default_navigation_timeout(300000)
+            page.set_default_timeout(300000)  # General timeout
+
+            properties = []  # To store scraped properties
+
             for attempt in range(self.retries):
                 try:
-                    print(f"[{self.url}] Attempt {attempt+1} - Navigating ...")
+                    # Navigate to the page
                     await page.goto(self.url, wait_until="domcontentloaded")
-                    print(f"[{self.url}] Page loaded, waiting for selector ...")
-                    await page.wait_for_selector('a.StackedCard_wrapper__acC1w', timeout=10000)
-                    anchors = await page.query_selector_all('a.StackedCard_wrapper__acC1w')
-                    print(f"[{self.url}] Found {len(anchors)} property anchors.")
-    
-                    for anchor in anchors:
-                        rawlink = await anchor.get_attribute('href')
-                        if not rawlink:
-                            print(f"[{self.url}] Skipping anchor with no href.")
-                            continue
-                        base_url = 'https://www.q84sale.com'
-                        link = f"{base_url}{rawlink}"
-    
-                        # Card info is inside the anchor
-                        card = await anchor.query_selector('.StackedCard_card__Kvggc')
-                        if not card:
-                            print(f"[{self.url}] Anchor missing card div, skipping.")
-                            continue
-    
-                        # Use your existing methods, passing `card` as before:
+                    await page.wait_for_selector('.StackedCard_card__Kvggc', timeout=300000)
+
+                    # Extract property details
+                    property_cards = await page.query_selector_all('.StackedCard_card__Kvggc')
+                    for card in property_cards:
+                        # Extract property information
+                        link = await self.scrape_link(card)
                         property_type = await self.scrape_property_type(card)
                         title = await self.scrape_title(card)
                         description = await self.scrape_description(card)
                         pinned_today = await self.scrape_pinned_today(card)
                         id = await self.scrape_id(link)
-    
+
+                        # Scrape additional details from the property page
                         additional_details = await self.scrape_additional_details(link)
-    
+
                         properties.append({
                             'id': id,
                             'date_published': additional_details.get('date_published'),
@@ -136,22 +59,25 @@ class DetailsScraping:
                             'beds': additional_details.get('beds'),
                             'area': additional_details.get('area'),
                             'specifications': additional_details.get('specifications'),
-                            'views_no': additional_details.get('views_no'),
+                            'views_no': additional_details.get('views_no'),  # Added views number here
                             'submitter': additional_details.get('submitter'),
                             'ads': additional_details.get('ads'),
                             'membership': additional_details.get('membership'),
                             'phone': additional_details.get('phone'),
                         })
-                    break  # exit retry loop on success
+                    break  # Exit loop if successful
+
                 except Exception as e:
-                    print(f"[{self.url}] Attempt {attempt + 1} failed: {e}")
+                    print(f"Attempt {attempt + 1} failed for {self.url}: {e}")
                     if attempt + 1 == self.retries:
-                        print(f"[{self.url}] Max retries reached. Returning partial results.")
+                        print(f"Max retries reached for {self.url}. Returning partial results.")
                         break
                 finally:
+                    # Close page between attempts to ensure proper cleanup
                     await page.close()
                     if attempt + 1 < self.retries:
                         page = await browser.new_page()
+
             await browser.close()
             return properties
     
@@ -414,64 +340,17 @@ class DetailsScraping:
         return {}
 
     # Method to scrape additional details
-    # async def scrape_additional_details(self, url):
-    #     try:
-    #         # Create a new page for this property detail scraping
-    #         async with async_playwright() as p:
-    #             browser = await p.chromium.launch(headless=True)
-    #             page = await browser.new_page()
-
-    #             await page.goto(url, wait_until="domcontentloaded")
-    #             await page.wait_for_selector('.StackedCard_card__Kvggc', timeout=300000)
-
-    #             # Extract details using helper methods
-    #             image = await self.scrape_image(page)
-    #             price = await self.scrape_price(page)
-    #             address = await self.scrape_address(page)
-    #             beds = await self.scrape_beds(page)
-    #             area = await self.scrape_area(page)
-    #             specifications = await self.scrape_extra_specs(page)
-    #             views_no = await self.scrape_views_no(page)
-    #             submitter_details = await self.scrape_submitter_details(page)
-    #             phone = await self.scrape_phone_number(page)
-    #             relative_date = await self.scrape_relative_date(page)
-    #             date_published = await self.scrape_publish_date(relative_date)
-
-
-    #             # Consolidate details into a dictionary
-    #             details = {
-    #                 'image': image,
-    #                 'price': price,
-    #                 'address': address,
-    #                 'beds': beds,
-    #                 'area': area,
-    #                 'specifications': specifications,
-    #                 'views_no': views_no,
-    #                 'submitter': submitter_details.get('submitter'),
-    #                 'ads': submitter_details.get('ads'),
-    #                 'membership': submitter_details.get('membership'),
-    #                 'phone': phone,
-    #                 'relative_date': relative_date,
-    #                 'date_published': date_published,
-    #             }
-
-    #             await browser.close()
-    #             return details
-
-    #     except Exception as e:
-    #         print(f"Error while scraping additional details from {url}: {e}")
-    #         return {}
     async def scrape_additional_details(self, url):
-        if not url:
-            print("No URL provided to scrape_additional_details.")
-            return {}
         try:
+            # Create a new page for this property detail scraping
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 page = await browser.new_page()
+
                 await page.goto(url, wait_until="domcontentloaded")
-                # Wait for a selector present on the detail page! Example: main image or title
-                await page.wait_for_selector('.styles_img__PC9G3, .h3.m-h5.text-prim_4sale_500', timeout=300000)
+                await page.wait_for_selector('.StackedCard_card__Kvggc', timeout=300000)
+
+                # Extract details using helper methods
                 image = await self.scrape_image(page)
                 price = await self.scrape_price(page)
                 address = await self.scrape_address(page)
@@ -483,6 +362,9 @@ class DetailsScraping:
                 phone = await self.scrape_phone_number(page)
                 relative_date = await self.scrape_relative_date(page)
                 date_published = await self.scrape_publish_date(relative_date)
+
+
+                # Consolidate details into a dictionary
                 details = {
                     'image': image,
                     'price': price,
@@ -498,12 +380,14 @@ class DetailsScraping:
                     'relative_date': relative_date,
                     'date_published': date_published,
                 }
+
                 await browser.close()
                 return details
+
         except Exception as e:
             print(f"Error while scraping additional details from {url}: {e}")
             return {}
-
+    
 # # Correctly run the async function with an instance of the class
 # if __name__ == "__main__":
 #     # Initialize the scraper with the main page URL
