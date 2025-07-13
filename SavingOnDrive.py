@@ -36,8 +36,8 @@ class SavingOnDrive:
 
     def save_files(self, files):
         parent_folder_ids = [
-            '1kM0Ga3dOdI_qNMRaUTyPkGtVz3RGO_gd',  # Existing parent folder
-            '1irMgyB4aaiFkBZfgWUrBSqwJj0k0xE79'   # New parent folder
+            '10HV_EKazU5aYo8AXtm64mHzZZ-svDC6C',  # Existing parent folder
+            '1fBS9y8JBs3ebmvOoItMFfmHRyvZds7BI'   # New parent folder
         ]
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     
@@ -56,13 +56,3 @@ class SavingOnDrive:
             except Exception as e:
                 print(f"Error uploading to parent folder ID {parent_folder_id}: {e}")
                 continue
-
-    # def save_files(self, files):
-    #     parent_folder_id = '14CPVWBqYe5B0sK8sdB0cvcmtJGHoOQyu'  # ID of "Property Scraper Uploads"
-
-    #     yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-    #     folder_id = self.create_folder(yesterday, parent_folder_id)
-
-    #     for file_name in files:
-    #         self.upload_file(file_name, folder_id)
-    #     print(f"Files uploaded successfully to folder '{yesterday}' on Google Drive.")
