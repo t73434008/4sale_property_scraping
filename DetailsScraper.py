@@ -387,15 +387,4 @@ class DetailsScraping:
         except Exception as e:
             print(f"Error while scraping additional details from {url}: {e}")
             return {}
-    
-# # Correctly run the async function with an instance of the class
-# if __name__ == "__main__":
-#     # Initialize the scraper with the main page URL
-#     scraper = DetailsScraping("https://www.q84sale.com/en/property/for-sale/house-for-sale/1")
-#
-#     # Use asyncio.run to execute the async function
-#     properties = asyncio.run(scraper.get_property_details())
-#
-#     # Print the extracted details
-#     for property in properties:
-#         print(property)
+
